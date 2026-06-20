@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="description" content="Bubble Math — pop the bubble with the right answer! A fun math reflex game.">
+  <meta name="description" content="Bubble Math — pop the bubble with the right answer! A fun math reflex game for kids.">
   <meta name="theme-color" content="#0b1426">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,6 +35,7 @@
       --accent-danger: #ff6b6b;
       --accent-danger-glow: rgba(255, 107, 107, 0.4);
       --accent-yellow: #ffdd59;
+      --accent-gold: #f9ca24;
 
       --text-primary: #ffffff;
       --text-secondary: #e1f5fe;
@@ -112,6 +113,18 @@
       100% { transform: translateY(-110vh) translateX(var(--drift, 20px)) scale(1.1); opacity: 0; }
     }
 
+    /* Reduce Motion: disable heavy animations */
+    body.reduce-motion .bg-waves,
+    body.reduce-motion .bg-seaweed,
+    body.reduce-motion .bg-bubble-particle,
+    body.reduce-motion .mascot,
+    body.reduce-motion .tentacle {
+      animation: none !important;
+    }
+    body.reduce-motion .bubble.spawning { animation: none !important; }
+    body.reduce-motion .bubble.squish-x,
+    body.reduce-motion .bubble.squish-y { animation: none !important; }
+
     /* ═══════════════════════════════════════════════════════════
        SCREENS & LAYOUT
        ═══════════════════════════════════════════════════════════ */
@@ -134,6 +147,11 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    .sel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 400px; margin-bottom: 4px;
+    }
+
     .sel-title {
       font-family: var(--font-display); font-weight: 800;
       font-size: clamp(2.5rem, 9vw, 3.5rem); letter-spacing: -0.5px;
@@ -147,6 +165,18 @@
       margin-bottom: 24px; text-align: center;
     }
     .sel-subtitle span { color: var(--accent-cyan); font-weight: 700; }
+
+    /* Settings cog */
+    .btn-cog {
+      width: 42px; height: 42px; border: none; border-radius: 50%;
+      background: var(--bg-card); color: var(--text-secondary);
+      font-size: 1.3rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.06);
+      transition: all 0.2s var(--ease-spring);
+    }
+    .btn-cog:hover { background: var(--bg-card-hover); transform: rotate(45deg); }
+    .btn-cog:active { transform: scale(0.9); }
 
     .section-label {
       font-family: var(--font-display);
@@ -235,15 +265,16 @@
 
     /* ── Mode Toggle ── */
     .mode-row {
-      display: flex; gap: 10px; margin-bottom: 24px; margin-top: 4px;
+      display: flex; gap: 8px; margin-bottom: 24px; margin-top: 4px;
       width: 100%; max-width: 400px; justify-content: center;
+      flex-wrap: wrap;
     }
     .mode-btn {
-      flex: 1; max-width: 180px; height: 48px;
+      flex: 1; min-width: 100px; max-width: 140px; height: 48px;
       border: 2px solid rgba(255,255,255,0.06);
       border-radius: var(--radius-full); background: var(--bg-card);
       color: var(--text-secondary); font-family: var(--font-body);
-      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
       box-shadow: inset 0 -3px 4px rgba(0,0,0,0.1);
       transition: all 0.2s var(--ease-spring);
     }
@@ -257,6 +288,40 @@
       border-color: var(--accent-cyan);
       color: var(--accent-cyan);
       box-shadow: 0 0 16px var(--accent-cyan-glow), inset 0 -3px 4px rgba(0,0,0,0.05);
+    }
+
+    /* Daily Challenge card */
+    .daily-card {
+      width: 100%; max-width: 400px; padding: 14px 18px;
+      border-radius: var(--radius-md); margin-bottom: 16px;
+      background: linear-gradient(135deg, rgba(249, 194, 36, 0.12), rgba(255, 159, 67, 0.10));
+      border: 2px solid rgba(249, 194, 36, 0.25);
+      cursor: pointer; transition: all 0.2s var(--ease-spring);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .daily-card:hover { transform: translateY(-2px); border-color: var(--accent-gold); }
+    .daily-card:active { transform: scale(0.97); }
+    .daily-card.completed {
+      opacity: 0.55; cursor: default;
+      border-color: rgba(255,255,255,0.08);
+      background: var(--bg-card);
+    }
+    .daily-card.completed:hover { transform: none; }
+    .daily-icon { font-size: 2rem; line-height: 1; }
+    .daily-info { flex: 1; }
+    .daily-title {
+      font-family: var(--font-display); font-weight: 700;
+      font-size: 1rem; color: var(--accent-gold);
+    }
+    .daily-sub {
+      font-size: 0.78rem; color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .daily-badge {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: 0.75rem; color: var(--accent-teal);
+      background: rgba(5, 196, 107, 0.15);
+      padding: 4px 10px; border-radius: var(--radius-full);
     }
 
     /* ── Start Button ── */
@@ -289,21 +354,56 @@
 
     /* ── Stats Row ── */
     .sel-stats {
-      display: flex; gap: 20px; margin-top: 24px; margin-bottom: 16px;
+      display: flex; gap: 12px; margin-top: 24px; margin-bottom: 16px;
+      flex-wrap: wrap; justify-content: center;
     }
     .mini-stat {
-      text-align: center; padding: 12px 20px;
+      text-align: center; padding: 10px 16px;
       background: var(--bg-card); border-radius: var(--radius-md);
       border: 2px solid rgba(255,255,255,0.06);
       box-shadow: inset 0 -3px 4px rgba(0,0,0,0.1);
+      min-width: 72px;
     }
     .mini-stat__label {
-      font-size: 0.72rem; color: var(--text-muted);
+      font-size: 0.68rem; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;
     }
     .mini-stat__value {
-      font-family: var(--font-display); font-size: 1.35rem;
+      font-family: var(--font-display); font-size: 1.25rem;
       font-weight: 800; color: var(--accent-yellow);
+    }
+    .mini-stat__value.streak-fire { color: var(--accent-orange); }
+
+    /* ── Streak Calendar ── */
+    .streak-calendar {
+      width: 100%; max-width: 400px; margin-top: 8px; margin-bottom: 12px;
+      background: var(--bg-card); border-radius: var(--radius-md);
+      border: 2px solid rgba(255,255,255,0.06); padding: 12px;
+    }
+    .streak-cal-title {
+      font-family: var(--font-display); font-size: 0.78rem;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 8px; text-align: center;
+    }
+    .streak-cal-grid {
+      display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;
+    }
+    .streak-day {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 0.6rem; font-weight: 700;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+    .streak-day.played {
+      background: rgba(5, 196, 107, 0.25);
+      color: var(--accent-teal);
+      border: 1px solid rgba(5, 196, 107, 0.35);
+    }
+    .streak-day.today {
+      border: 2px solid var(--accent-cyan);
+      color: var(--accent-cyan);
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -318,6 +418,7 @@
       align-items: center; padding: 12px 18px; z-index: 20;
       background: rgba(7, 34, 51, 0.85); backdrop-filter: blur(10px);
       border-bottom: 2px solid rgba(255,255,255,0.05);
+      gap: 8px;
     }
     .hud-item {
       font-family: var(--font-display); font-size: 0.95rem; font-weight: 800;
@@ -334,6 +435,44 @@
     }
     .hud-lives .heart { transition: opacity 0.25s, transform 0.25s var(--ease-spring); }
     .hud-lives .heart.lost { opacity: 0.15; transform: scale(0.65) rotate(-15deg); }
+
+    /* Timer bar for Time Attack */
+    .timer-bar-wrap {
+      width: 100%; height: 6px; background: rgba(0,0,0,0.3);
+      z-index: 20; display: none;
+    }
+    .timer-bar-wrap.active { display: block; }
+    .timer-bar {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, var(--accent-teal), var(--accent-cyan));
+      transition: width 0.3s linear, background 0.3s;
+      border-radius: 0 3px 3px 0;
+    }
+    .timer-bar.danger {
+      background: linear-gradient(90deg, var(--accent-danger), var(--accent-orange));
+    }
+
+    /* Onboarding tip banner */
+    .tip-banner {
+      width: 100%; padding: 10px 18px; z-index: 25;
+      background: rgba(249, 194, 36, 0.12);
+      border-bottom: 2px solid rgba(249, 194, 36, 0.2);
+      display: none; align-items: center; gap: 10px;
+      font-size: 0.82rem; color: var(--accent-yellow);
+      font-weight: 600;
+      animation: tip-slide 0.4s var(--ease-spring);
+    }
+    .tip-banner.active { display: flex; }
+    .tip-banner .tip-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .tip-banner .tip-close {
+      margin-left: auto; cursor: pointer; font-size: 1rem;
+      opacity: 0.6; transition: opacity 0.2s;
+    }
+    .tip-banner .tip-close:hover { opacity: 1; }
+    @keyframes tip-slide {
+      0% { transform: translateY(-100%); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
 
     .question-bar {
       width: 100%; display: flex; justify-content: center; align-items: center;
@@ -462,6 +601,14 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
+    /* Daily progress indicator in HUD */
+    .hud-progress {
+      font-family: var(--font-display); font-size: 0.8rem; font-weight: 700;
+      color: var(--accent-gold); background: rgba(249, 194, 36, 0.12);
+      padding: 4px 10px; border-radius: var(--radius-full);
+      border: 1.5px solid rgba(249, 194, 36, 0.2);
+    }
+
     /* ── Play Area ── */
     .play-area {
       flex: 1; width: 100%; position: relative;
@@ -486,6 +633,25 @@
       pointer-events: none;
     }
     .bubble:active { filter: brightness(1.25); }
+
+    /* Boss Bubble */
+    .bubble.boss-bubble {
+      border: 3px solid var(--accent-gold) !important;
+      box-shadow: 
+        inset 0 5px 8px rgba(255,255,255,0.45),
+        inset 0 -5px 8px rgba(0,0,0,0.15),
+        0 0 25px rgba(249, 194, 36, 0.4),
+        0 0 50px rgba(249, 194, 36, 0.15) !important;
+      animation: boss-glow 1.5s ease-in-out infinite alternate;
+    }
+    .bubble.boss-bubble.cracked {
+      opacity: 0.7;
+      border-style: dashed !important;
+    }
+    @keyframes boss-glow {
+      0% { filter: brightness(1) saturate(1); }
+      100% { filter: brightness(1.2) saturate(1.3); }
+    }
 
     /* Bubble Face elements */
     .bubble-eyes {
@@ -606,6 +772,17 @@
       100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
     }
 
+    /* Star burst particles (for boss/special events) */
+    .star-particle {
+      position: absolute; pointer-events: none; z-index: 14;
+      font-size: 1.2rem;
+      animation: star-fly 0.8s var(--ease-out-expo) forwards;
+    }
+    @keyframes star-fly {
+      0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(180deg); opacity: 0; }
+    }
+
     /* Praise Text Popups */
     .praise-text {
       position: absolute;
@@ -675,11 +852,19 @@
     .go-detail span { color: var(--accent-yellow); font-weight: 700; }
     .go-new-best {
       font-size: 1rem; color: var(--accent-orange); font-weight: 800;
-      margin-top: 8px; margin-bottom: 24px;
+      margin-top: 8px; margin-bottom: 12px;
       opacity: 0; transform: translateY(6px);
       transition: opacity 0.4s, transform 0.4s var(--ease-spring);
     }
     .go-new-best.show { opacity: 1; transform: translateY(0); }
+
+    /* Daily completion message */
+    .go-daily-msg {
+      font-size: 0.9rem; color: var(--accent-gold); font-weight: 700;
+      margin-bottom: 12px; text-align: center;
+      display: none;
+    }
+    .go-daily-msg.show { display: block; }
 
     .btn-retry {
       width: min(280px, 80vw); height: 58px; border: none;
@@ -698,6 +883,19 @@
       background: linear-gradient(135deg, rgba(255,255,255,0.22), transparent);
       border-radius: inherit;
     }
+
+    /* Extra life (rewarded ad placeholder) */
+    .btn-extra-life {
+      margin-top: 8px; width: min(280px, 80vw); height: 48px;
+      border: 2px solid rgba(249, 194, 36, 0.25); border-radius: var(--radius-full);
+      background: rgba(249, 194, 36, 0.08); color: var(--accent-gold);
+      font-family: var(--font-display); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s var(--ease-spring);
+      display: none;
+    }
+    .btn-extra-life.show { display: block; }
+    .btn-extra-life:hover { background: rgba(249, 194, 36, 0.15); }
+    .btn-extra-life:active { transform: scale(0.95); }
 
     .btn-settings {
       margin-top: 12px; width: min(280px, 80vw); height: 44px;
@@ -722,6 +920,67 @@
     .btn-share:active { transform: scale(0.95); }
 
     /* ═══════════════════════════════════════════════════════════
+       SETTINGS MODAL
+       ═══════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      width: 100%; max-width: 340px;
+      background: linear-gradient(180deg, #0f3a55, #072233);
+      border-radius: var(--radius-lg);
+      border: 2px solid rgba(255,255,255,0.08);
+      padding: 24px 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: modal-in 0.3s var(--ease-spring);
+    }
+    @keyframes modal-in {
+      0% { transform: scale(0.9) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal-title {
+      font-family: var(--font-display); font-size: 1.3rem; font-weight: 800;
+      color: var(--accent-cyan); margin-bottom: 20px; text-align: center;
+    }
+    .modal-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .modal-row:last-child { border-bottom: none; }
+    .modal-row-label {
+      font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);
+    }
+    .modal-row-sub {
+      font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;
+    }
+    /* Toggle switch */
+    .toggle {
+      width: 48px; height: 26px; border-radius: 13px;
+      background: rgba(255,255,255,0.12); cursor: pointer;
+      position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    .toggle.on { background: var(--accent-teal); }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: white; transition: transform 0.2s var(--ease-spring);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .toggle.on::after { transform: translateX(22px); }
+    .modal-close {
+      margin-top: 20px; width: 100%; height: 44px; border: none;
+      border-radius: var(--radius-full);
+      background: var(--bg-card); color: var(--text-secondary);
+      font-family: var(--font-body); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg-card-hover); }
+
+    /* ═══════════════════════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════════════════════ */
     @media (max-height: 640px) {
@@ -740,6 +999,8 @@
       .tentacle { width: 5px; height: 11px; }
       .question-board { padding: 4px 12px; }
       .question-text { font-size: 1.6rem; }
+      .daily-card { padding: 10px 14px; }
+      .streak-calendar { padding: 8px; }
     }
   </style>
 </head>
@@ -754,8 +1015,21 @@
   <!-- SELECTION SCREEN                                        -->
   <!-- ════════════════════════════════════════════════════════ -->
   <div id="screen-select" class="screen active">
-    <h1 class="sel-title">Bubble Math</h1>
+    <div class="sel-header">
+      <h1 class="sel-title">Bubble Math</h1>
+      <button class="btn-cog" id="btn-cog" aria-label="Settings">⚙️</button>
+    </div>
     <p class="sel-subtitle">Pop the bubble with the <span>right answer</span></p>
+
+    <!-- Daily Challenge Card -->
+    <div class="daily-card" id="daily-card">
+      <div class="daily-icon">🏆</div>
+      <div class="daily-info">
+        <div class="daily-title" id="daily-title">Daily Challenge</div>
+        <div class="daily-sub" id="daily-sub">10 questions • same for everyone today</div>
+      </div>
+      <div class="daily-badge" id="daily-badge">PLAY</div>
+    </div>
 
     <div class="section-label">Operations</div>
     <div class="op-grid" id="op-grid">
@@ -775,6 +1049,7 @@
     <div class="mode-row">
       <button class="mode-btn selected" data-mode="survival" id="mode-survival">💀 Survival</button>
       <button class="mode-btn" data-mode="practice" id="mode-practice">📚 Practice</button>
+      <button class="mode-btn" data-mode="timeattack" id="mode-timeattack">⏱️ Time Attack</button>
     </div>
 
     <button id="btn-start" class="btn-start" disabled>SELECT TO START</button>
@@ -785,9 +1060,19 @@
         <div id="sel-best" class="mini-stat__value">0</div>
       </div>
       <div class="mini-stat">
-        <div class="mini-stat__label">Streak</div>
-        <div id="sel-streak" class="mini-stat__value">0</div>
+        <div class="mini-stat__label">Daily Best</div>
+        <div id="sel-daily-best" class="mini-stat__value">0</div>
       </div>
+      <div class="mini-stat">
+        <div class="mini-stat__label">🔥 Streak</div>
+        <div id="sel-streak" class="mini-stat__value streak-fire">0</div>
+      </div>
+    </div>
+
+    <!-- Streak Calendar -->
+    <div class="streak-calendar" id="streak-calendar">
+      <div class="streak-cal-title">Last 14 Days</div>
+      <div class="streak-cal-grid" id="streak-cal-grid"></div>
     </div>
   </div>
 
@@ -798,7 +1083,16 @@
     <div class="game-hud">
       <div class="hud-item">Score <span id="hud-score">0</span></div>
       <div class="hud-lives" id="hud-lives"></div>
+      <div class="hud-progress" id="hud-progress" style="display:none;"></div>
       <div class="hud-item">Lvl <span id="hud-level">1</span></div>
+    </div>
+    <div class="timer-bar-wrap" id="timer-bar-wrap">
+      <div class="timer-bar" id="timer-bar"></div>
+    </div>
+    <div class="tip-banner" id="tip-banner">
+      <div class="tip-icon">💡</div>
+      <div class="tip-text" id="tip-text">Tap the bubble with the right answer!</div>
+      <div class="tip-close" id="tip-close">✕</div>
     </div>
     <div class="question-bar">
       <div class="mascot-container">
@@ -837,12 +1131,87 @@
     <div class="go-detail">Best streak: <span id="go-streak">0</span></div>
     <div class="go-detail">Level reached: <span id="go-lvl">1</span></div>
     <div id="go-new-best" class="go-new-best">🎉 NEW HIGH SCORE!</div>
+    <div id="go-daily-msg" class="go-daily-msg">🏆 Daily Challenge Complete! Come back tomorrow!</div>
+    <button id="btn-extra-life" class="btn-extra-life">📺 Extra Life (Watch Ad)</button>
     <button id="btn-retry" class="btn-retry">TAP TO RETRY</button>
     <button id="btn-back" class="btn-settings">⚙️ Change Settings</button>
-    <button id="btn-go-share" class="btn-share">📤 Share Score</button>
+    <button id="btn-go-share" class="btn-share">📤 Share Certificate</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- SETTINGS MODAL                                          -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-box">
+      <div class="modal-title">⚙️ Settings</div>
+      <div class="modal-row">
+        <div>
+          <div class="modal-row-label">Reduce Motion</div>
+          <div class="modal-row-sub">Disable waves, seaweed & bubble wobble</div>
+        </div>
+        <div class="toggle" id="toggle-motion" role="switch" aria-label="Reduce Motion"></div>
+      </div>
+      <div class="modal-row">
+        <div>
+          <div class="modal-row-label">Remove Ads</div>
+          <div class="modal-row-sub">Coming soon (₹99)</div>
+        </div>
+        <div class="toggle" id="toggle-ads" role="switch" aria-label="Remove Ads"></div>
+      </div>
+      <button class="modal-close" id="modal-close">Done</button>
+    </div>
   </div>
 
   <script>
+  /* ═══════════════════════════════════════════════════════════
+     CONFIG (Feature Flags)
+     ═══════════════════════════════════════════════════════════ */
+  const Config = {
+    DAILY_QUESTION_COUNT: 10,
+    TIMEATTACK_DURATION: 60,
+    TIMEATTACK_PENALTY: 3,
+    BOSS_INTERVAL: 10,
+    BOSS_SCALE: 1.65,
+    BOSS_HP: 2,
+    BOSS_REWARD: 3,
+    ONBOARDING_ENABLED: true,
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     SEEDED RNG (Deterministic — same day = same questions)
+     ═══════════════════════════════════════════════════════════ */
+  const SeededRNG = {
+    seed: 1,
+    init(s) { this.seed = s >>> 0; },
+    next() {
+      this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
+      return this.seed / 4294967296;
+    },
+    randInt(min, max) {
+      return Math.floor(this.next() * (max - min + 1)) + min;
+    }
+  };
+
+  function todayDateInt() {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  function todayKey() {
+    return '' + todayDateInt();
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     ANALYTICS STUB (Console-only, no network)
+     ═══════════════════════════════════════════════════════════ */
+  const Analytics = {
+    log(event, data) {
+      if (typeof console !== 'undefined') {
+        console.log(`[BM Analytics] ${event}`, data || '');
+      }
+    }
+  };
+
   /* ═══════════════════════════════════════════════════════════
      AUDIO (Web Audio API — zero latency)
      ═══════════════════════════════════════════════════════════ */
@@ -914,6 +1283,30 @@
           }, i * 35);
         }
       },
+      boss() {
+        const ac = c();
+        const playNote = (freq, delay, dur) => {
+          setTimeout(() => {
+            const osc = ac.createOscillator(), g = ac.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            g.gain.setValueAtTime(0.06, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+            osc.connect(g); g.connect(ac.destination);
+            osc.start(); osc.stop(ac.currentTime + dur);
+          }, delay);
+        };
+        playNote(330, 0, 0.15);
+        playNote(440, 100, 0.15);
+        playNote(554, 200, 0.25);
+      },
+      bossCrack() { tone(200, 0.15, 'sawtooth', 0.1); },
+      bossPop() {
+        const ac = c();
+        [523, 659, 784, 1047, 1319].forEach((f, i) => {
+          setTimeout(() => tone(f, 0.2, 'sine', 0.08), i * 40);
+        });
+      },
       tap() { tone(550, 0.04, 'triangle', 0.08); },
     };
   })();
@@ -927,32 +1320,90 @@
   };
 
   /* ═══════════════════════════════════════════════════════════
+     STREAK TRACKER (Date-based consecutive play detection)
+     ═══════════════════════════════════════════════════════════ */
+  const Streaks = {
+    check() {
+      const today = todayKey();
+      const lastPlayed = Store.get('lastPlayDate', '');
+      const streak = Store.get('playStreak', 0);
+
+      if (lastPlayed === today) return streak; // Already played today
+
+      // Check if yesterday
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const yesterday = '' + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
+
+      if (lastPlayed === yesterday) {
+        return streak; // streak preserved, will increment on play
+      } else if (lastPlayed) {
+        // Streak broken
+        Store.set('playStreak', 0);
+        return 0;
+      }
+      return 0;
+    },
+    recordPlay() {
+      const today = todayKey();
+      const lastPlayed = Store.get('lastPlayDate', '');
+      let streak = Store.get('playStreak', 0);
+
+      if (lastPlayed === today) return streak; // Already counted
+
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const yesterday = '' + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
+
+      if (lastPlayed === yesterday || !lastPlayed) {
+        streak++;
+      } else {
+        streak = 1; // Reset
+      }
+
+      Store.set('playStreak', streak);
+      Store.set('lastPlayDate', today);
+
+      // Record in play history for calendar
+      const history = Store.get('playHistory', {});
+      history[today] = true;
+      Store.set('playHistory', history);
+
+      return streak;
+    },
+    getHistory() {
+      return Store.get('playHistory', {});
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════
      QUESTION GENERATOR
      ═══════════════════════════════════════════════════════════ */
   const Questions = {
-    generate(types, tables, difficulty) {
-      const type = types[Math.floor(Math.random() * types.length)];
+    generate(types, tables, difficulty, rng = null) {
+      const rFn = rng ? (min, max) => rng.randInt(min, max) : randInt;
+      const type = types[rFn(0, types.length - 1)];
       const maxNum = difficulty.maxNum;
       let a, b, answer, text;
 
       switch (type) {
         case 'add':
-          a = randInt(1, maxNum); b = randInt(1, maxNum);
+          a = rFn(1, maxNum); b = rFn(1, maxNum);
           answer = a + b; text = `${a} + ${b} = ?`;
           break;
         case 'sub':
-          a = randInt(2, maxNum); b = randInt(1, a);
+          a = rFn(2, maxNum); b = rFn(1, a);
           answer = a - b; text = `${a} − ${b} = ?`;
           break;
         case 'mul': {
-          const t = tables.length ? tables[randInt(0, tables.length - 1)] : randInt(2, 12);
-          b = t; a = randInt(1, Math.min(12, maxNum));
+          const t = tables.length ? tables[rFn(0, tables.length - 1)] : rFn(2, 12);
+          b = t; a = rFn(1, Math.min(12, maxNum));
           answer = a * b; text = `${a} × ${b} = ?`;
           break;
         }
         case 'div': {
-          const t = tables.length ? tables[randInt(0, tables.length - 1)] : randInt(2, 12);
-          b = t; a = randInt(1, Math.min(12, maxNum));
+          const t = tables.length ? tables[rFn(0, tables.length - 1)] : rFn(2, 12);
+          b = t; a = rFn(1, Math.min(12, maxNum));
           answer = a; // a is the quotient
           text = `${a * b} ÷ ${b} = ?`;
           break;
@@ -960,6 +1411,36 @@
       }
 
       return { text, answer, type, operands: [a, b] };
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     DAILY CHALLENGE (Deterministic questions from date seed)
+     ═══════════════════════════════════════════════════════════ */
+  const DailyChallenge = {
+    generateQuestions() {
+      SeededRNG.init(todayDateInt());
+      const questions = [];
+      const types = ['add', 'sub', 'mul', 'div'];
+      const diff = { maxNum: 15, bubbleCount: 5, speed: 45, level: 3 };
+
+      for (let i = 0; i < Config.DAILY_QUESTION_COUNT; i++) {
+        const q = Questions.generate(types, [], diff, SeededRNG);
+        questions.push(q);
+      }
+      return questions;
+    },
+    isCompleted() {
+      return Store.get('dailyCompleted_' + todayKey(), false);
+    },
+    markCompleted(score) {
+      Store.set('dailyCompleted_' + todayKey(), true);
+      Store.set('dailyScore_' + todayKey(), score);
+      const best = Store.get('dailyBest', 0);
+      if (score > best) Store.set('dailyBest', score);
+    },
+    getTodayScore() {
+      return Store.get('dailyScore_' + todayKey(), 0);
     }
   };
 
@@ -1054,23 +1535,28 @@
       return { el, w: rect.width, h: rect.height };
     },
 
-    spawn(values, correctAnswer, speed) {
+    spawn(values, correctAnswer, speed, bossIndex = -1) {
       this.clearAll();
       this.area = this.getArea();
       this.baseSpeed = speed;
-      const size = Math.min(85, Math.max(65, this.area.w / (values.length + 1)));
-      const positions = this._placeBubbles(values.length, size);
+      const baseSize = Math.min(85, Math.max(65, this.area.w / (values.length + 1)));
+      const positions = this._placeBubbles(values.length, baseSize, bossIndex);
 
       // Play bubble spawning SFX cascade
       SFX.spawn();
 
       values.forEach((val, i) => {
+        const isBoss = i === bossIndex;
+        const size = isBoss ? baseSize * Config.BOSS_SCALE : baseSize;
         const color = BUBBLE_COLORS[i % BUBBLE_COLORS.length];
         const el = document.createElement('div');
         
         // Mark worry face if decoy is a near-miss
         const isNearMiss = Math.abs(val - correctAnswer) <= 2 && val !== correctAnswer;
-        el.className = 'bubble spawning' + (isNearMiss ? ' worry' : '');
+        let className = 'bubble spawning';
+        if (isNearMiss && !isBoss) className += ' worry';
+        if (isBoss) className += ' boss-bubble';
+        el.className = className;
         
         el.style.width = el.style.height = size + 'px';
         el.style.fontSize = (size * 0.30) + 'px';
@@ -1092,13 +1578,15 @@
 
         const b = {
           el, x: positions[i].x, y: positions[i].y,
-          vx: (Math.random() - 0.5) * speed * 1.25,
-          vy: (Math.random() - 0.5) * speed,
+          vx: (Math.random() - 0.5) * speed * (isBoss ? 0.7 : 1.25),
+          vy: (Math.random() - 0.5) * speed * (isBoss ? 0.7 : 1),
           size, value: val, isCorrect: val === correctAnswer,
           wobblePhase: Math.random() * Math.PI * 2,
           wobbleSpeed: 1.2 + Math.random() * 1.5,
           wobbleAmp: 6 + Math.random() * 8,
-          popped: false
+          popped: false,
+          isBoss: isBoss,
+          bossHP: isBoss ? Config.BOSS_HP : 0,
         };
 
         el.style.setProperty('--pos', `translate(${b.x}px, ${b.y}px)`);
@@ -1120,7 +1608,7 @@
       this._startLoop();
     },
 
-    _placeBubbles(count, size) {
+    _placeBubbles(count, size, bossIndex = -1) {
       const a = this.area;
       const pad = size / 2 + 10;
       const positions = [];
@@ -1128,11 +1616,13 @@
 
       for (let i = 0; i < count; i++) {
         let placed = false;
+        const s = i === bossIndex ? size * Config.BOSS_SCALE : size;
+        const p = s / 2 + 10;
         for (let attempt = 0; attempt < 80; attempt++) {
-          const x = pad + Math.random() * (a.w - size - pad * 2);
-          const y = pad + Math.random() * (a.h - size - pad * 2);
-          const ok = positions.every(p =>
-            Math.hypot(p.x - x, p.y - y) >= minDist
+          const x = p + Math.random() * (a.w - s - p * 2);
+          const y = p + Math.random() * (a.h - s - p * 2);
+          const ok = positions.every(pp =>
+            Math.hypot(pp.x - x, pp.y - y) >= minDist
           );
           if (ok) { positions.push({ x, y }); placed = true; break; }
         }
@@ -1276,9 +1766,24 @@
       }
     },
 
-    showPraiseText(bubble) {
+    crackBoss(bubble) {
+      bubble.bossHP--;
+      bubble.el.classList.add('cracked');
+      SFX.bossCrack();
+      this.triggerSquish(bubble, 'x');
+    },
+
+    popBoss(bubble) {
+      bubble.popped = true;
+      bubble.el.classList.add('popping');
+      this._spawnStarBurst(bubble);
+      this.showPraiseText(bubble, 'BOSS DOWN!');
+      SFX.bossPop();
+    },
+
+    showPraiseText(bubble, forcedText) {
       const praises = ["Super!", "Yay!", "Awesome!", "Wow!", "Perfect!", "Great Job!", "Splendid!", "Bingo!", "Hooray!"];
-      const text = praises[Math.floor(Math.random() * praises.length)];
+      const text = forcedText || praises[Math.floor(Math.random() * praises.length)];
 
       const cx = bubble.x + bubble.size / 2;
       const cy = bubble.y + bubble.size / 2;
@@ -1313,6 +1818,26 @@
       }
     },
 
+    _spawnStarBurst(bubble) {
+      const cx = bubble.x + bubble.size / 2;
+      const cy = bubble.y + bubble.size / 2;
+      const stars = ['⭐', '✨', '🌟', '💫', '🔥'];
+
+      for (let i = 0; i < 12; i++) {
+        const s = document.createElement('div');
+        s.className = 'star-particle';
+        s.textContent = stars[i % stars.length];
+        const angle = (Math.PI * 2 / 12) * i;
+        const dist = 50 + Math.random() * 60;
+        s.style.left = cx + 'px';
+        s.style.top = cy + 'px';
+        s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+        s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+        this.area.el.appendChild(s);
+        setTimeout(() => s.remove(), 800);
+      }
+    },
+
     fadeOutAll() {
       for (const b of this.bubbles) {
         if (!b.popped) {
@@ -1330,8 +1855,116 @@
       if (this.area?.el) {
         this.area.el.querySelectorAll('.pop-particle').forEach(p => p.remove());
         this.area.el.querySelectorAll('.praise-text').forEach(p => p.remove());
+        this.area.el.querySelectorAll('.star-particle').forEach(p => p.remove());
       }
     },
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     CANVAS SHARING — Generates a certificate image
+     ═══════════════════════════════════════════════════════════ */
+  const ShareCanvas = {
+    async generate(score, streak, level, mode) {
+      const W = 800, H = 800;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      // Ocean gradient background
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#1A8CB7');
+      bg.addColorStop(1, '#072233');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Decorative circles
+      ctx.globalAlpha = 0.06;
+      for (let i = 0; i < 12; i++) {
+        ctx.beginPath();
+        ctx.arc(Math.random() * W, Math.random() * H, 30 + Math.random() * 80, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Title
+      ctx.font = '700 52px Fredoka, sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.fillText('🫧 Bubble Math 🫧', W / 2, 100);
+
+      // Certificate border
+      ctx.strokeStyle = 'rgba(0, 210, 255, 0.35)';
+      ctx.lineWidth = 4;
+      ctx.roundRect(40, 40, W - 80, H - 80, 30);
+      ctx.stroke();
+
+      // Score
+      ctx.font = '800 140px Fredoka, sans-serif';
+      const scoreGrad = ctx.createLinearGradient(W / 2 - 100, 200, W / 2 + 100, 400);
+      scoreGrad.addColorStop(0, '#00d2ff');
+      scoreGrad.addColorStop(1, '#05c46b');
+      ctx.fillStyle = scoreGrad;
+      ctx.fillText(score, W / 2, 350);
+
+      // Labels
+      ctx.font = '600 24px Quicksand, sans-serif';
+      ctx.fillStyle = 'rgba(225, 245, 254, 0.6)';
+      ctx.fillText('SCORE', W / 2, 195);
+
+      // Details
+      ctx.font = '700 28px Quicksand, sans-serif';
+      ctx.fillStyle = '#e1f5fe';
+      ctx.fillText(`Best Streak: ${streak}`, W / 2, 440);
+      ctx.fillText(`Level Reached: ${level}`, W / 2, 485);
+      ctx.fillText(`Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`, W / 2, 530);
+
+      // Date
+      ctx.font = '500 20px Quicksand, sans-serif';
+      ctx.fillStyle = 'rgba(225, 245, 254, 0.4)';
+      ctx.fillText(new Date().toLocaleDateString('en-IN', { dateStyle: 'long' }), W / 2, 610);
+
+      // Footer
+      ctx.font = '700 22px Fredoka, sans-serif';
+      ctx.fillStyle = '#ffdd59';
+      ctx.fillText('#BubbleMath', W / 2, 700);
+
+      // Convert to blob
+      return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob), 'image/png');
+      });
+    },
+
+    async share(score, streak, level, mode) {
+      try {
+        const blob = await this.generate(score, streak, level, mode);
+        const file = new File([blob], 'bubble-math-score.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Bubble Math Score',
+            text: `🫧 I scored ${score} in Bubble Math! Level ${level}, Streak ${streak} #BubbleMath`,
+            files: [file],
+          });
+        } else {
+          // Fallback: download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'bubble-math-score.png';
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch (e) {
+        // Clipboard fallback
+        const text = `🫧 Bubble Math — Scored ${score}!\nStreak: ${streak} | Level ${level}\n\n#BubbleMath`;
+        try {
+          await navigator.clipboard.writeText(text);
+          $('btn-go-share').textContent = '✅ Copied!';
+          setTimeout(() => $('btn-go-share').textContent = '📤 Share Certificate', 1500);
+        } catch { prompt('Copy your score:', text); }
+      }
+    }
   };
 
   /* ═══════════════════════════════════════════════════════════
@@ -1359,6 +1992,25 @@
     currentQuestion: null,
     isActive: false,
 
+    // Time Attack
+    timeLeft: 0,
+    timerInterval: null,
+
+    // Daily Challenge
+    isDaily: false,
+    dailyQuestions: [],
+    dailyIndex: 0,
+
+    // Boss
+    isBossRound: false,
+
+    // Onboarding
+    hasShownFirstTip: false,
+    hasShownMissTip: false,
+
+    // Extra life used
+    extraLifeUsed: false,
+
     start(config) {
       this.types = config.types;
       this.tables = config.tables;
@@ -1368,12 +2020,68 @@
       this.bestStreak = 0;
       this.lives = 3;
       this.isActive = true;
+      this.isBossRound = false;
+      this.extraLifeUsed = false;
+
+      // Time Attack
+      this.timeLeft = Config.TIMEATTACK_DURATION;
+      if (this.timerInterval) clearInterval(this.timerInterval);
+      this.timerInterval = null;
+
+      // Daily
+      this.isDaily = config.isDaily || false;
+      this.dailyQuestions = config.dailyQuestions || [];
+      this.dailyIndex = 0;
+
+      // HUD setup
+      $('timer-bar-wrap').classList.toggle('active', this.mode === 'timeattack');
+      $('hud-progress').style.display = this.isDaily ? '' : 'none';
 
       this._updateHUD();
       showScreen('game');
 
+      // Onboarding tip
+      const isFirstLaunch = !Store.get('onboarded', false);
+      if (Config.ONBOARDING_ENABLED && isFirstLaunch) {
+        this.hasShownFirstTip = true;
+        this._showTip('💡 Tap the bubble with the correct answer!');
+        Store.set('onboarded', true);
+      }
+
+      // Record play for streak
+      Streaks.recordPlay();
+
+      Analytics.log('game_start', { mode: this.mode, isDaily: this.isDaily });
+
       // Small delay for screen transition
-      setTimeout(() => this.nextQuestion(), 300);
+      setTimeout(() => {
+        this.nextQuestion();
+        if (this.mode === 'timeattack') this._startTimer();
+      }, 300);
+    },
+
+    _startTimer() {
+      this.timeLeft = Config.TIMEATTACK_DURATION;
+      this._updateTimerBar();
+
+      this.timerInterval = setInterval(() => {
+        this.timeLeft -= 0.1;
+        this._updateTimerBar();
+        if (this.timeLeft <= 0) {
+          this.timeLeft = 0;
+          this.isActive = false;
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+          setTimeout(() => this._gameOver(), 300);
+        }
+      }, 100);
+    },
+
+    _updateTimerBar() {
+      const pct = Math.max(0, (this.timeLeft / Config.TIMEATTACK_DURATION) * 100);
+      const bar = $('timer-bar');
+      bar.style.width = pct + '%';
+      bar.classList.toggle('danger', this.timeLeft < 15);
     },
 
     nextQuestion() {
@@ -1385,9 +2093,39 @@
         mascot.className = 'mascot';
       }
 
-      const diff = Difficulty.forScore(this.score);
-      const q = Questions.generate(this.types, this.tables, diff);
+      // Hide tip
+      $('tip-banner').classList.remove('active');
+
+      let q;
+      let diff;
+
+      if (this.isDaily) {
+        // Daily Challenge: use pre-generated questions
+        if (this.dailyIndex >= this.dailyQuestions.length) {
+          // Daily completed
+          this.isActive = false;
+          DailyChallenge.markCompleted(this.score);
+          setTimeout(() => this._gameOver(), 300);
+          return;
+        }
+        q = this.dailyQuestions[this.dailyIndex];
+        this.dailyIndex++;
+        diff = { bubbleCount: 5, speed: 45, maxNum: 15, level: 3 };
+        $('hud-progress').textContent = `${this.dailyIndex}/${Config.DAILY_QUESTION_COUNT}`;
+      } else {
+        diff = Difficulty.forScore(this.score);
+        q = Questions.generate(this.types, this.tables, diff);
+      }
+
       this.currentQuestion = q;
+
+      // Check for Boss Round
+      this.isBossRound = false;
+      let bossIndex = -1;
+      if (!this.isDaily && this.score > 0 && this.score % Config.BOSS_INTERVAL === 0) {
+        this.isBossRound = true;
+        SFX.boss();
+      }
 
       // Display question
       const qEl = $('question-text');
@@ -1402,8 +2140,13 @@
       const values = [q.answer, ...decoys.slice(0, decoyCount)];
       shuffle(values);
 
+      // Boss: the correct answer bubble is the boss
+      if (this.isBossRound) {
+        bossIndex = values.indexOf(q.answer);
+      }
+
       // Spawn bubbles
-      BubbleMgr.spawn(values, q.answer, diff.speed);
+      BubbleMgr.spawn(values, q.answer, diff.speed, bossIndex);
 
       this._updateHUD();
     },
@@ -1412,11 +2155,25 @@
       if (!this.isActive || bubble.popped) return;
 
       if (bubble.isCorrect) {
+        // Boss bubble: handle HP
+        if (bubble.isBoss && bubble.bossHP > 1) {
+          BubbleMgr.crackBoss(bubble);
+          return;
+        }
+
         // CORRECT
         SFX.pop();
         SFX.correct();
-        BubbleMgr.popBubble(bubble, true);
-        BubbleMgr.fadeOutAll();
+
+        if (bubble.isBoss) {
+          BubbleMgr.popBoss(bubble);
+          BubbleMgr.fadeOutAll();
+          this.score += Config.BOSS_REWARD;
+        } else {
+          BubbleMgr.popBubble(bubble, true);
+          BubbleMgr.fadeOutAll();
+          this.score++;
+        }
 
         // Animate mascot success reaction
         const mascot = $('mascot-octopus');
@@ -1424,7 +2181,6 @@
           mascot.className = 'mascot celebrate';
         }
 
-        this.score++;
         this.streak++;
         if (this.streak > this.bestStreak) this.bestStreak = this.streak;
 
@@ -1453,6 +2209,16 @@
           mascot.className = 'mascot sad';
         }
 
+        // Near-miss tip (first time)
+        if (Config.ONBOARDING_ENABLED && !this.hasShownMissTip) {
+          const diff = Math.abs(bubble.value - this.currentQuestion.answer);
+          if (diff <= 2) {
+            this._showTip(`Close! ${bubble.value} is a near-miss decoy. Look carefully! 🔍`);
+            this.hasShownMissTip = true;
+            Store.set('shownMissTip', true);
+          }
+        }
+
         // Flash + shake
         const fl = $('flash-overlay');
         fl.className = 'flash-overlay wrong';
@@ -1462,7 +2228,18 @@
           $('screen-game').classList.remove('shake');
         }, 350);
 
-        if (this.mode === 'survival') {
+        if (this.mode === 'timeattack') {
+          // Time Attack: subtract time
+          this.timeLeft -= Config.TIMEATTACK_PENALTY;
+          if (this.timeLeft <= 0) {
+            this.timeLeft = 0;
+            this.isActive = false;
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+            setTimeout(() => this._gameOver(), 500);
+          }
+          this._updateTimerBar();
+        } else if (this.mode === 'survival') {
           this.isActive = false;
           setTimeout(() => this._gameOver(), 500);
         } else {
@@ -1478,25 +2255,52 @@
       }
     },
 
+    _showTip(text) {
+      $('tip-text').textContent = text;
+      $('tip-banner').classList.add('active');
+    },
+
     _gameOver() {
       BubbleMgr.clearAll();
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+
       const isNewBest = this.score > Store.get('best', 0);
       if (isNewBest) Store.set('best', this.score);
       if (this.bestStreak > Store.get('bestStreak', 0)) Store.set('bestStreak', this.bestStreak);
 
       $('go-score').textContent = this.score;
-      $('go-rounds').textContent = this.score;
+      $('go-rounds').textContent = this.isDaily ? this.dailyIndex : this.score;
       $('go-streak').textContent = this.bestStreak;
-      $('go-lvl').textContent = Difficulty.forScore(this.score).level;
+      $('go-lvl').textContent = this.isDaily ? 3 : Difficulty.forScore(this.score).level;
       $('go-new-best').classList.toggle('show', isNewBest);
+
+      // Daily completion message
+      const dailyMsg = $('go-daily-msg');
+      dailyMsg.classList.toggle('show', this.isDaily);
+      if (this.isDaily) {
+        dailyMsg.textContent = `🏆 Daily Challenge Complete! Score: ${this.score}/${Config.DAILY_QUESTION_COUNT}. Come back tomorrow!`;
+      }
+
+      // Extra life button (practice mode only, not used yet)
+      const extraBtn = $('btn-extra-life');
+      const showExtra = this.mode === 'practice' && !this.extraLifeUsed && !Store.get('removeAds', false);
+      extraBtn.classList.toggle('show', showExtra);
+
+      // Retry button text
+      $('btn-retry').textContent = this.isDaily && DailyChallenge.isCompleted() ? '🏠 HOME' : 'TAP TO RETRY';
 
       showScreen('gameover');
       updateSelStats();
+
+      Analytics.log('game_over', { score: this.score, mode: this.mode, isDaily: this.isDaily });
     },
 
     _updateHUD() {
       $('hud-score').textContent = this.score;
-      $('hud-level').textContent = Difficulty.forScore(this.score).level;
+      $('hud-level').textContent = this.isDaily ? 3 : Difficulty.forScore(this.score).level;
 
       // Lives (practice mode)
       const livesEl = $('hud-lives');
@@ -1511,6 +2315,16 @@
       } else {
         livesEl.innerHTML = '';
       }
+    },
+
+    // Extra life: resurrect with 1 life
+    useExtraLife() {
+      this.extraLifeUsed = true;
+      this.lives = 1;
+      this.isActive = true;
+      showScreen('game');
+      this.nextQuestion();
+      Analytics.log('extra_life_used');
     }
   };
 
@@ -1582,6 +2396,21 @@
     });
   });
 
+  // Daily Challenge card
+  $('daily-card').addEventListener('click', () => {
+    if (DailyChallenge.isCompleted()) return;
+    SFX.tap();
+    const questions = DailyChallenge.generateQuestions();
+    Game.start({
+      types: ['add', 'sub', 'mul', 'div'],
+      tables: [],
+      mode: 'survival',
+      isDaily: true,
+      dailyQuestions: questions,
+    });
+    Analytics.log('daily_challenge_start');
+  });
+
   // Start button
   $('btn-start').addEventListener('click', () => {
     if (selectedOps.size === 0) return;
@@ -1609,31 +2438,89 @@
   // Retry — same settings, instant
   $('btn-retry').addEventListener('click', () => {
     SFX.tap();
-    Game.start({
-      types: Store.get('lastOps', ['add']),
-      tables: Store.get('lastTables', []),
-      mode: Store.get('lastMode', 'survival'),
-    });
+    if (Game.isDaily && DailyChallenge.isCompleted()) {
+      showScreen('select');
+      return;
+    }
+    if (Game.isDaily) {
+      const questions = DailyChallenge.generateQuestions();
+      Game.start({
+        types: ['add', 'sub', 'mul', 'div'],
+        tables: [],
+        mode: 'survival',
+        isDaily: true,
+        dailyQuestions: questions,
+      });
+    } else {
+      Game.start({
+        types: Store.get('lastOps', ['add']),
+        tables: Store.get('lastTables', []),
+        mode: Store.get('lastMode', 'survival'),
+      });
+    }
+  });
+
+  // Extra life button
+  $('btn-extra-life').addEventListener('click', () => {
+    SFX.tap();
+    // Placeholder: In production, this would show a rewarded ad
+    // For now, just grant the extra life
+    Game.useExtraLife();
+    Analytics.log('rewarded_ad_shown');
   });
 
   // Back to settings
   $('btn-back').addEventListener('click', () => {
     SFX.tap();
+    if (Game.timerInterval) {
+      clearInterval(Game.timerInterval);
+      Game.timerInterval = null;
+    }
     showScreen('select');
   });
 
-  // Share
+  // Share (now uses canvas certificate)
   $('btn-go-share').addEventListener('click', async () => {
-    const text = `🫧 Bubble Math — Scored ${Game.score}!\nStreak: ${Game.bestStreak} | Level ${Difficulty.forScore(Game.score).level}\n\n#BubbleMath`;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'Bubble Math', text }); } catch {}
-    } else {
-      try {
-        await navigator.clipboard.writeText(text);
-        $('btn-go-share').textContent = '✅ Copied!';
-        setTimeout(() => $('btn-go-share').textContent = '📤 Share Score', 1500);
-      } catch { prompt('Copy your score:', text); }
+    const mode = Game.isDaily ? 'daily' : Game.mode;
+    await ShareCanvas.share(Game.score, Game.bestStreak, 
+      Game.isDaily ? 3 : Difficulty.forScore(Game.score).level, mode);
+  });
+
+  // Tip close button
+  $('tip-close').addEventListener('click', () => {
+    $('tip-banner').classList.remove('active');
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     SETTINGS MODAL
+     ═══════════════════════════════════════════════════════════ */
+  $('btn-cog').addEventListener('click', () => {
+    SFX.tap();
+    $('modal-settings').classList.add('active');
+  });
+  $('modal-close').addEventListener('click', () => {
+    $('modal-settings').classList.remove('active');
+  });
+  $('modal-settings').addEventListener('click', (e) => {
+    if (e.target === $('modal-settings')) {
+      $('modal-settings').classList.remove('active');
     }
+  });
+
+  // Reduce Motion toggle
+  $('toggle-motion').addEventListener('click', () => {
+    const tog = $('toggle-motion');
+    const isOn = tog.classList.toggle('on');
+    Store.set('reduceMotion', isOn);
+    document.body.classList.toggle('reduce-motion', isOn);
+  });
+
+  // Remove Ads toggle (stub)
+  $('toggle-ads').addEventListener('click', () => {
+    const tog = $('toggle-ads');
+    const isOn = tog.classList.toggle('on');
+    Store.set('removeAds', isOn);
+    Analytics.log('remove_ads_toggled', { enabled: isOn });
   });
 
   /* ═══════════════════════════════════════════════════════════
@@ -1653,12 +2540,61 @@
 
   function updateSelStats() {
     $('sel-best').textContent = Store.get('best', 0);
-    $('sel-streak').textContent = Store.get('bestStreak', 0);
+    $('sel-daily-best').textContent = Store.get('dailyBest', 0);
+    $('sel-streak').textContent = Streaks.check();
+    updateDailyCard();
+    updateStreakCalendar();
+  }
+
+  function updateDailyCard() {
+    const completed = DailyChallenge.isCompleted();
+    const card = $('daily-card');
+    card.classList.toggle('completed', completed);
+    if (completed) {
+      $('daily-badge').textContent = '✅ DONE';
+      $('daily-sub').textContent = `Score: ${DailyChallenge.getTodayScore()}/${Config.DAILY_QUESTION_COUNT} • Come back tomorrow!`;
+    } else {
+      $('daily-badge').textContent = 'PLAY';
+      $('daily-sub').textContent = '10 questions • same for everyone today';
+    }
+  }
+
+  function updateStreakCalendar() {
+    const grid = $('streak-cal-grid');
+    grid.innerHTML = '';
+    const history = Streaks.getHistory();
+    const today = new Date();
+
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = '' + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
+      const dayNum = d.getDate();
+
+      const el = document.createElement('div');
+      el.className = 'streak-day';
+      if (history[key]) el.classList.add('played');
+      if (i === 0) el.classList.add('today');
+      el.textContent = dayNum;
+      grid.appendChild(el);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════
      INIT
      ═══════════════════════════════════════════════════════════ */
+  // Apply saved settings
+  if (Store.get('reduceMotion', false)) {
+    document.body.classList.add('reduce-motion');
+    $('toggle-motion').classList.add('on');
+  }
+  if (Store.get('removeAds', false)) {
+    $('toggle-ads').classList.add('on');
+  }
+
+  // Init onboarding flags
+  Game.hasShownMissTip = Store.get('shownMissTip', false);
+
   updateSelStats();
   initBgBubbles();
 
@@ -1702,14 +2638,29 @@
   }
 
   const lastMode = Store.get('lastMode', 'survival');
-  if (lastMode === 'practice') {
-    selectedMode = 'practice';
-    $('mode-survival').classList.remove('selected');
-    $('mode-practice').classList.add('selected');
+  if (lastMode && lastMode !== 'survival') {
+    selectedMode = lastMode;
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.mode === selectedMode);
+    });
   }
 
   // Prevent double-tap zoom
   document.addEventListener('dblclick', e => e.preventDefault());
+
+  // First-launch auto-start (Onboarding)
+  if (Config.ONBOARDING_ENABLED && !Store.get('onboarded', false)) {
+    // Auto-start with Addition + Survival for first-timers
+    setTimeout(() => {
+      selectedOps.add('add');
+      document.querySelector('.op-card[data-op="add"]').classList.add('selected');
+      Game.start({
+        types: ['add'],
+        tables: [],
+        mode: 'survival',
+      });
+    }, 800);
+  }
 
   // Service Worker
   if ('serviceWorker' in navigator) {
