@@ -1318,7 +1318,7 @@
       <div class="modal-row">
         <div>
           <div class="modal-row-label">Remove Ads</div>
-          <div class="modal-row-sub">Coming soon (₹99)</div>
+          <div class="modal-row-sub" id="toggle-ads-sub">Coming soon (₹99)</div>
         </div>
         <div class="toggle" id="toggle-ads" role="switch" aria-label="Remove Ads"></div>
       </div>
@@ -2405,13 +2405,13 @@
 
     setAdsRemoved(removed) {
       Store.set('removeAds', removed);
-      const btn = $('btn-extra-life');
-      if (btn && removed) {
-        btn.classList.remove('show');
-      }
       const tog = $('toggle-ads');
       if (tog) {
         tog.classList.toggle('on', removed);
+      }
+      const sub = $('toggle-ads-sub');
+      if (sub) {
+        sub.textContent = removed ? 'Premium Active (Ad-Free) ❤️' : 'Coming soon (₹99)';
       }
     },
 
@@ -3126,10 +3126,23 @@
         dailyMsg.textContent = `🏆 Daily Challenge Complete! Score: ${this.score}/${Config.DAILY_QUESTION_COUNT}. Come back tomorrow!`;
       }
 
-      // Extra life button (practice mode only, not used yet)
+      // Extra life button (practice mode only)
       const extraBtn = $('btn-extra-life');
-      const showExtra = this.mode === 'practice' && !this.extraLifeUsed && !Store.get('removeAds', false);
+      const showExtra = this.mode === 'practice' && !this.extraLifeUsed;
       extraBtn.classList.toggle('show', showExtra);
+      if (showExtra) {
+        if (Store.get('removeAds', false)) {
+          extraBtn.textContent = '⚡ Instant Extra Life (Free)';
+          extraBtn.style.borderColor = 'var(--accent-teal)';
+          extraBtn.style.color = 'var(--accent-teal)';
+          extraBtn.style.background = 'rgba(5, 196, 107, 0.08)';
+        } else {
+          extraBtn.textContent = '📺 Extra Life (Watch Ad)';
+          extraBtn.style.borderColor = 'rgba(249, 194, 36, 0.25)';
+          extraBtn.style.color = 'var(--accent-gold)';
+          extraBtn.style.background = 'rgba(249, 194, 36, 0.08)';
+        }
+      }
 
       // Retry button text
       $('btn-retry').textContent = this.isDaily && DailyChallenge.isCompleted() ? '🏠 HOME' : 'TAP TO RETRY';
@@ -3569,9 +3582,8 @@
     document.body.classList.add('reduce-motion');
     $('toggle-motion').classList.add('on');
   }
-  if (Store.get('removeAds', false)) {
-    $('toggle-ads').classList.add('on');
-  }
+  // Restore ads status and update UI
+  IAP.setAdsRemoved(Store.get('removeAds', false));
 
   // Initialize In-App Purchases (Play Billing)
   IAP.init();
