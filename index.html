@@ -1002,7 +1002,15 @@
       .daily-card { padding: 10px 14px; }
       .streak-calendar { padding: 8px; }
     }
+    /* Keyboard Focus Ring */
+    .bubble:focus-visible {
+      outline: 4px solid var(--accent-yellow) !important;
+      outline-offset: 6px !important;
+      box-shadow: 0 0 25px var(--accent-yellow), inset 0 5px 8px rgba(255,255,255,0.45) !important;
+      z-index: 100;
+    }
   </style>
+  <script defer data-domain="bubblemath.app" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
   <!-- Ambient Ocean Background -->
@@ -1202,15 +1210,35 @@
   }
 
   /* ═══════════════════════════════════════════════════════════
-     ANALYTICS STUB (Console-only, no network)
+     ANALYTICS (Plausible Integration & Fallbacks)
      ═══════════════════════════════════════════════════════════ */
+  window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) };
+
   const Analytics = {
     log(event, data) {
       if (typeof console !== 'undefined') {
         console.log(`[BM Analytics] ${event}`, data || '');
       }
+      try {
+        if (window.plausible) {
+          window.plausible(event, { props: data });
+        }
+      } catch (e) {}
     }
   };
+
+  let hasStartedGame = false;
+  let hasLoggedAbandon = false;
+  function logAbandonment() {
+    if (!hasStartedGame && !hasLoggedAbandon) {
+      hasLoggedAbandon = true;
+      Analytics.log('selection_screen_abandoned');
+    }
+  }
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') logAbandonment();
+  });
+  window.addEventListener('pagehide', logAbandonment);
 
   /* ═══════════════════════════════════════════════════════════
      AUDIO (Web Audio API — zero latency)
@@ -1589,12 +1617,23 @@
           bossHP: isBoss ? Config.BOSS_HP : 0,
         };
 
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', `Bubble ${val}`);
+
         el.style.setProperty('--pos', `translate(${b.x}px, ${b.y}px)`);
         el.style.transform = `translate(${b.x}px, ${b.y}px) scale(0)`;
 
         el.addEventListener('pointerdown', (e) => {
           e.preventDefault(); e.stopPropagation();
           Game.handleBubbleTap(b);
+        });
+
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            Game.handleBubbleTap(b);
+          }
         });
 
         this.area.el.appendChild(el);
@@ -1869,6 +1908,7 @@
       const canvas = document.createElement('canvas');
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
+      const isDaily = mode === 'daily';
 
       // Ocean gradient background
       const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -1891,7 +1931,7 @@
       ctx.font = '700 52px Fredoka, sans-serif';
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
-      ctx.fillText('🫧 Bubble Math 🫧', W / 2, 100);
+      ctx.fillText(isDaily ? '🏆 Daily Challenge 🏆' : '🫧 Bubble Math 🫧', W / 2, 100);
 
       // Certificate border
       ctx.strokeStyle = 'rgba(0, 210, 255, 0.35)';
@@ -1915,9 +1955,17 @@
       // Details
       ctx.font = '700 28px Quicksand, sans-serif';
       ctx.fillStyle = '#e1f5fe';
-      ctx.fillText(`Best Streak: ${streak}`, W / 2, 440);
-      ctx.fillText(`Level Reached: ${level}`, W / 2, 485);
-      ctx.fillText(`Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`, W / 2, 530);
+      if (isDaily) {
+        ctx.fillStyle = '#ffdd59';
+        ctx.fillText(`Daily Score: ${score} / ${Config.DAILY_QUESTION_COUNT}`, W / 2, 440);
+        ctx.fillStyle = '#e1f5fe';
+        ctx.fillText(`Active Streak: ${streak} Days`, W / 2, 485);
+        ctx.fillText('Status: Deterministic Seed Solved', W / 2, 530);
+      } else {
+        ctx.fillText(`Best Streak: ${streak}`, W / 2, 440);
+        ctx.fillText(`Level Reached: ${level}`, W / 2, 485);
+        ctx.fillText(`Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`, W / 2, 530);
+      }
 
       // Date
       ctx.font = '500 20px Quicksand, sans-serif';
@@ -1936,14 +1984,17 @@
     },
 
     async share(score, streak, level, mode) {
+      const isDaily = mode === 'daily';
       try {
         const blob = await this.generate(score, streak, level, mode);
         const file = new File([blob], 'bubble-math-score.png', { type: 'image/png' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: 'Bubble Math Score',
-            text: `🫧 I scored ${score} in Bubble Math! Level ${level}, Streak ${streak} #BubbleMath`,
+            title: isDaily ? 'Bubble Math Daily Challenge' : 'Bubble Math Score',
+            text: isDaily
+              ? `🏆 I beat today's Bubble Math Daily Challenge! Score: ${score}/10, Streak: ${streak} Days! #BubbleMath`
+              : `🫧 I scored ${score} in Bubble Math! Level ${level}, Streak ${streak} #BubbleMath`,
             files: [file],
           });
         } else {
@@ -1957,13 +2008,235 @@
         }
       } catch (e) {
         // Clipboard fallback
-        const text = `🫧 Bubble Math — Scored ${score}!\nStreak: ${streak} | Level ${level}\n\n#BubbleMath`;
+        const text = isDaily
+          ? `🏆 Bubble Math Daily Challenge Complete!\nScore: ${score}/10 | Streak: ${streak} Days\n\n#BubbleMath`
+          : `🫧 Bubble Math — Scored ${score}!\nStreak: ${streak} | Level ${level}\n\n#BubbleMath`;
         try {
           await navigator.clipboard.writeText(text);
           $('btn-go-share').textContent = '✅ Copied!';
           setTimeout(() => $('btn-go-share').textContent = '📤 Share Certificate', 1500);
         } catch { prompt('Copy your score:', text); }
       }
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     ADMOB REWARDED VIDEO ADS
+     ═══════════════════════════════════════════════════════════ */
+  const AdMob = {
+    showRewardedAd(onCompleted) {
+      if (Store.get('removeAds', false)) {
+        onCompleted(true);
+        return;
+      }
+      if (window.AndroidInterface && typeof window.AndroidInterface.showRewardedAd === 'function') {
+        window.onRewardedAdCompleted = (success) => {
+          onCompleted(success);
+        };
+        window.AndroidInterface.showRewardedAd();
+      } else {
+        this.showSimulatedAd(onCompleted);
+      }
+    },
+    showSimulatedAd(onCompleted) {
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '999';
+      overlay.style.background = 'rgba(7, 34, 51, 0.96)';
+      overlay.style.backdropFilter = 'blur(15px)';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.padding = '24px';
+      overlay.style.color = '#fff';
+      overlay.style.fontFamily = 'Fredoka, system-ui, sans-serif';
+
+      overlay.innerHTML = `
+        <div style="text-align: center; max-width: 320px;">
+          <div style="font-size: 3.2rem; margin-bottom: 16px; animation: pulse-ad 1.5s infinite;">📺</div>
+          <h2 style="font-size: 1.5rem; color: #ffdd59; margin-bottom: 8px;">Simulated Video Ad</h2>
+          <p style="font-size: 0.9rem; color: rgba(225,245,254,0.7); margin-bottom: 24px; font-family: Quicksand, sans-serif; line-height: 1.4;">
+            This ad is a preview helper for web testing.
+          </p>
+          <div style="font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #00d2ff;" id="ad-countdown">Reward in 3 seconds...</div>
+          <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+            <div id="ad-progress" style="width: 0%; height: 100%; background: #05c46b; transition: width 0.1s linear;"></div>
+          </div>
+        </div>
+        <style>
+          @keyframes pulse-ad {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+          }
+        </style>
+      `;
+
+      document.body.appendChild(overlay);
+
+      let timeLeft = 3.0;
+      const progress = document.getElementById('ad-progress');
+      const text = document.getElementById('ad-countdown');
+      
+      const interval = setInterval(() => {
+        timeLeft -= 0.1;
+        const pct = ((3.0 - timeLeft) / 3.0) * 100;
+        if (progress) progress.style.width = pct + '%';
+        if (text) text.textContent = `Reward in ${Math.ceil(timeLeft)} seconds...`;
+
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          overlay.remove();
+          onCompleted(true);
+        }
+      }, 100);
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════
+     GOOGLE PLAY BILLING (IN-APP PURCHASES)
+     ═══════════════════════════════════════════════════════════ */
+  const IAP = {
+    SKU_REMOVE_ADS: 'remove_ads',
+    service: null,
+
+    async init() {
+      if ('getDigitalGoodsService' in window) {
+        try {
+          this.service = await window.getDigitalGoodsService('https://play.google.com/billing');
+          await this.restorePurchases();
+        } catch (e) {
+          console.warn('[IAP] Digital Goods API not available or failed:', e);
+        }
+      }
+    },
+
+    async restorePurchases() {
+      if (!this.service) return;
+      try {
+        const purchases = await this.service.listPurchases();
+        let hasRemoveAds = false;
+        for (const p of purchases) {
+          if (p.itemId === this.SKU_REMOVE_ADS) {
+            hasRemoveAds = true;
+            break;
+          }
+        }
+        if (hasRemoveAds) {
+          this.setAdsRemoved(true);
+        }
+      } catch (e) {
+        console.error('[IAP] restorePurchases failed:', e);
+      }
+    },
+
+    setAdsRemoved(removed) {
+      Store.set('removeAds', removed);
+      const btn = $('btn-extra-life');
+      if (btn && removed) {
+        btn.classList.remove('show');
+      }
+      const tog = $('toggle-ads');
+      if (tog) {
+        tog.classList.toggle('on', removed);
+      }
+    },
+
+    async purchaseRemoveAds() {
+      if (Store.get('removeAds', false)) return true;
+
+      if (this.service) {
+        try {
+          const supportedInstruments = [{
+            supportedMethods: 'https://play.google.com/billing',
+            data: { sku: this.SKU_REMOVE_ADS }
+          }];
+          const details = {
+            total: {
+              label: 'Remove Ads',
+              amount: { currency: 'INR', value: '99.00' }
+            }
+          };
+          const request = new PaymentRequest(supportedInstruments, details);
+          const response = await request.show();
+          await response.complete('success');
+          
+          this.setAdsRemoved(true);
+          Analytics.log('remove_ads_toggled', { enabled: true, source: 'google_play' });
+          return true;
+        } catch (e) {
+          console.error('[IAP] Play Billing purchase error:', e);
+          return false;
+        }
+      } else {
+        return new Promise((resolve) => {
+          this.showSimulatedCheckout((success) => {
+            if (success) {
+              this.setAdsRemoved(true);
+              Analytics.log('remove_ads_toggled', { enabled: true, source: 'simulated_checkout' });
+            }
+            resolve(success);
+          });
+        });
+      }
+    },
+
+    showSimulatedCheckout(onCompleted) {
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '999';
+      overlay.style.background = 'rgba(0,0,0,0.7)';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.padding = '20px';
+
+      overlay.innerHTML = `
+        <div style="width: 100%; max-width: 340px; background: #202124; color: #fff; border-radius: 12px; overflow: hidden; font-family: Roboto, sans-serif; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+          <!-- Header -->
+          <div style="padding: 16px 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <div style="font-size: 1.25rem; font-weight: 700; color: #34a853; display: flex; align-items: center; gap: 6px;">
+              Google Play Checkout
+            </div>
+          </div>
+          <!-- Body -->
+          <div style="padding: 20px;">
+            <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;">Remove Ads</div>
+            <div style="font-size: 0.8rem; color: #9aa0a6; margin-bottom: 16px;">Bubble Math Premium Lifetime Upgrade</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 24px;">₹99.00</div>
+            
+            <div style="font-size: 0.8rem; color: #9aa0a6; margin-bottom: 20px; line-height: 1.4;">
+              This is a development simulation of Google Play Billing. Tapping '1-Tap Buy' will grant the ad-free premium entitlement locally.
+            </div>
+          </div>
+          <!-- Footer Buttons -->
+          <div style="padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; background: #303134;">
+            <button id="sim-iap-cancel" style="background: none; border: none; color: #8ab4f8; font-size: 0.9rem; font-weight: 700; cursor: pointer; padding: 8px 16px;">Cancel</button>
+            <button id="sim-iap-buy" style="background: #34a853; border: none; color: #fff; border-radius: 4px; font-size: 0.9rem; font-weight: 700; cursor: pointer; padding: 8px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">1-Tap Buy</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      const cancel = document.getElementById('sim-iap-cancel');
+      const buy = document.getElementById('sim-iap-buy');
+
+      cancel.onclick = () => {
+        overlay.remove();
+        onCompleted(false);
+      };
+
+      buy.onclick = () => {
+        buy.disabled = true;
+        buy.textContent = 'Processing...';
+        setTimeout(() => {
+          overlay.remove();
+          onCompleted(true);
+        }, 1200);
+      };
     }
   };
 
@@ -2012,6 +2285,7 @@
     extraLifeUsed: false,
 
     start(config) {
+      hasStartedGame = true;
       this.types = config.types;
       this.tables = config.tables;
       this.mode = config.mode;
@@ -2463,10 +2737,14 @@
   // Extra life button
   $('btn-extra-life').addEventListener('click', () => {
     SFX.tap();
-    // Placeholder: In production, this would show a rewarded ad
-    // For now, just grant the extra life
-    Game.useExtraLife();
-    Analytics.log('rewarded_ad_shown');
+    AdMob.showRewardedAd((success) => {
+      if (success) {
+        Game.useExtraLife();
+        Analytics.log('rewarded_ad_shown', { status: 'success' });
+      } else {
+        Analytics.log('rewarded_ad_shown', { status: 'failed' });
+      }
+    });
   });
 
   // Back to settings
@@ -2515,12 +2793,20 @@
     document.body.classList.toggle('reduce-motion', isOn);
   });
 
-  // Remove Ads toggle (stub)
-  $('toggle-ads').addEventListener('click', () => {
-    const tog = $('toggle-ads');
-    const isOn = tog.classList.toggle('on');
-    Store.set('removeAds', isOn);
-    Analytics.log('remove_ads_toggled', { enabled: isOn });
+  // Remove Ads purchase flow
+  $('toggle-ads').addEventListener('click', async () => {
+    const isCurrentlyOn = Store.get('removeAds', false);
+    if (isCurrentlyOn) {
+      // Already purchased, cannot turn off
+      return;
+    }
+    SFX.tap();
+    const success = await IAP.purchaseRemoveAds();
+    if (success) {
+      // Handled in IAP
+    } else {
+      $('toggle-ads').classList.remove('on');
+    }
   });
 
   /* ═══════════════════════════════════════════════════════════
@@ -2591,6 +2877,9 @@
   if (Store.get('removeAds', false)) {
     $('toggle-ads').classList.add('on');
   }
+
+  // Initialize In-App Purchases (Play Billing)
+  IAP.init();
 
   // Init onboarding flags
   Game.hasShownMissTip = Store.get('shownMissTip', false);
