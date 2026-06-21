@@ -1029,6 +1029,13 @@
       color: var(--accent-teal) !important;
       box-shadow: 0 0 12px var(--accent-teal-glow);
     }
+    .shop-item-btn.locked {
+      background: rgba(255, 255, 255, 0.02) !important;
+      border-color: rgba(255, 255, 255, 0.04) !important;
+      color: rgba(225, 245, 254, 0.3) !important;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
 
     /* Mascot Idle Wiggling Animation (Home Screen) */
     .mascot.idle-wiggle {
@@ -1040,6 +1047,68 @@
       50% { transform: translateY(-5px) rotate(4deg) scaleY(1.04); }
       60% { transform: translateY(-5px) rotate(-4deg); }
       100% { transform: translateY(0) rotate(0deg); }
+    }
+
+    /* Mascot Costumes (v4.1) */
+    .mascot.costume-party .octopus-head::after {
+      content: '';
+      position: absolute;
+      top: -15px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 16px solid var(--accent-yellow);
+      z-index: 10;
+    }
+    .mascot.costume-party .octopus-head::before {
+      content: '';
+      position: absolute;
+      top: -20px; left: 50%;
+      transform: translateX(-50%);
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-pink);
+      z-index: 11;
+    }
+
+    .mascot.costume-cape .octopus-head::before {
+      content: '';
+      position: absolute;
+      bottom: -6px; left: -10px; right: -10px;
+      height: 35px;
+      background: var(--accent-danger);
+      border-radius: 6px 6px 12px 12px;
+      z-index: -1;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      animation: cape-flutter 0.6s ease-in-out infinite alternate;
+      transform-origin: top center;
+    }
+    @keyframes cape-flutter {
+      0% { transform: skewX(-4deg) scaleY(1); }
+      100% { transform: skewX(4deg) scaleY(1.08); }
+    }
+
+    .mascot.costume-pirate .octopus-eye.left::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: #111;
+      border-radius: 50%;
+      z-index: 5;
+    }
+    .mascot.costume-pirate .octopus-head::after {
+      content: '';
+      position: absolute;
+      top: 12px; left: -2px;
+      width: 48px; height: 3.5px;
+      background: #111;
+      transform: rotate(-15deg);
+      z-index: 4;
+    }
+
+    body.reduce-motion .mascot.costume-cape .octopus-head::before {
+      animation: none !important;
     }
 
     /* Theme Stylesheets */
@@ -1084,7 +1153,7 @@
     <div class="sel-header">
       <h1 class="sel-title">Bubble Math</h1>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <button class="btn-cog" id="btn-shop" aria-label="Shop" style="color: var(--accent-yellow); font-family: var(--font-display); font-weight: 800; font-size: 1rem; width: auto; padding: 0 12px; border-radius: 20px; display: flex; align-items: center; gap: 4px;">⭐ <span id="sel-stars-count">0</span></button>
+        <button class="btn-cog" id="btn-collection" aria-label="Collection" style="color: var(--accent-yellow); font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; width: auto; padding: 0 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">🎁 Collection</button>
         <button class="btn-cog" id="btn-cog" aria-label="Settings">⚙️</button>
       </div>
     </div>
@@ -1093,7 +1162,6 @@
     <!-- Selection Screen Mascot -->
     <div class="mascot-container" style="margin-bottom: 12px; margin-top: -6px; height: 58px; width: 58px;">
       <div class="mascot idle-wiggle" id="sel-mascot-octopus">
-        <div class="mascot-accessory" id="sel-mascot-accessory" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%) scale(1.6); font-size: 1.1rem; z-index: 10; pointer-events: none;"></div>
         <div class="octopus-head">
           <div class="octopus-eyes">
             <div class="octopus-eye left"><div class="octopus-pupil"></div></div>
@@ -1186,7 +1254,6 @@
     <div class="question-bar">
       <div class="mascot-container">
         <div class="mascot" id="mascot-octopus">
-          <div class="mascot-accessory" id="mascot-accessory" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%) scale(1.6); font-size: 1.1rem; z-index: 10; pointer-events: none;"></div>
           <div class="octopus-head">
             <div class="octopus-eyes">
               <div class="octopus-eye left"><div class="octopus-pupil"></div></div>
@@ -1269,33 +1336,33 @@
     </div>
   </div>
 
-  <!-- Shop Modal -->
-  <div class="modal-overlay" id="modal-shop">
+  <!-- Collection Modal -->
+  <div class="modal-overlay" id="modal-collection">
     <div class="modal-box" style="max-width: 360px; padding: 24px 16px;">
-      <div class="modal-title" style="color: var(--accent-yellow); margin-bottom: 8px;">⭐ Kids Cosmetics Shop ⭐</div>
-      <div style="font-size: 0.85rem; text-align: center; color: #fff; margin-bottom: 16px; font-weight: 700; font-family: var(--font-body);">
-        Your Stars: <span style="color: var(--accent-yellow); font-size: 1.1rem;">⭐ <span id="shop-stars">0</span></span>
+      <div class="modal-title" style="color: var(--accent-yellow); margin-bottom: 8px;">🎁 Kids Collection 🎁</div>
+      <div style="font-size: 0.8rem; text-align: center; color: var(--text-secondary); margin-bottom: 16px; font-family: var(--font-body);">
+        Play to unlock themes and cute costumes!
       </div>
       
       <!-- Skins Section -->
-      <div class="section-label" style="font-size: 0.72rem; margin-bottom: 6px; padding-left: 2px;">Ocean Themes</div>
+      <div class="section-label" style="font-size: 0.72rem; margin-bottom: 6px; padding-left: 2px;">Bubble Themes</div>
       <div class="shop-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
         <button class="shop-item-btn" data-type="theme" data-id="default">Ocean (Free)</button>
-        <button class="shop-item-btn" data-type="theme" data-id="sunset" data-cost="30">Sunset Reef</button>
-        <button class="shop-item-btn" data-type="theme" data-id="neon" data-cost="60">Neon Night</button>
-        <button class="shop-item-btn" data-type="theme" data-id="candy" data-cost="100">Candy Land</button>
+        <button class="shop-item-btn" data-type="theme" data-id="sunset" data-req-type="correct" data-req-val="10">Sunset Reef</button>
+        <button class="shop-item-btn" data-type="theme" data-id="neon" data-req-type="streak" data-req-val="10">Neon Night</button>
+        <button class="shop-item-btn" data-type="theme" data-id="candy" data-req-type="correct" data-req-val="50">Candy Land</button>
       </div>
 
       <!-- Costumes Section -->
-      <div class="section-label" style="font-size: 0.72rem; margin-bottom: 6px; padding-left: 2px;">Mascot Hats</div>
+      <div class="section-label" style="font-size: 0.72rem; margin-bottom: 6px; padding-left: 2px;">Mascot Costumes</div>
       <div class="shop-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
-        <button class="shop-item-btn" data-type="hat" data-id="none">Bare Head (Free)</button>
-        <button class="shop-item-btn" data-type="hat" data-id="pirate" data-cost="25">Pirate Hat 🏴‍☠️</button>
-        <button class="shop-item-btn" data-type="hat" data-id="crown" data-cost="50">Shiny Crown 👑</button>
-        <button class="shop-item-btn" data-type="hat" data-id="hero" data-cost="80">Hero Mask 🕶️</button>
+        <button class="shop-item-btn" data-type="costume" data-id="none">Bare Head (Free)</button>
+        <button class="shop-item-btn" data-type="costume" data-id="party" data-req-type="streak" data-req-val="5">Party Hat</button>
+        <button class="shop-item-btn" data-type="costume" data-id="cape" data-req-type="correct" data-req-val="25">Super Cape</button>
+        <button class="shop-item-btn" data-type="costume" data-id="pirate" data-req-type="streak" data-req-val="15">Pirate Eyepatch</button>
       </div>
 
-      <button class="modal-close" id="shop-close" style="margin-top: 8px;">Done</button>
+      <button class="modal-close" id="collection-close" style="margin-top: 8px;">Done</button>
     </div>
   </div>
 
@@ -1483,6 +1550,56 @@
         playTone(659.25, 80, 0.15);  // E5
         playTone(784.00, 160, 0.15); // G5
         playTone(1046.50, 240, 0.3); // C6
+      },
+      delightFirstCorrect() {
+        const ac = c();
+        const playTone = (freq, delay, dur) => {
+          setTimeout(() => {
+            const osc = ac.createOscillator(), g = ac.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            g.gain.setValueAtTime(0.08, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+            osc.connect(g); g.connect(ac.destination);
+            osc.start(); osc.stop(ac.currentTime + dur);
+          }, delay);
+        };
+        playTone(523.25, 0, 0.12);  // C5
+        playTone(659.25, 60, 0.18); // E5
+      },
+      delightNewBestStreak() {
+        const ac = c();
+        const playTone = (freq, delay, dur) => {
+          setTimeout(() => {
+            const osc = ac.createOscillator(), g = ac.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            g.gain.setValueAtTime(0.07, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+            osc.connect(g); g.connect(ac.destination);
+            osc.start(); osc.stop(ac.currentTime + dur);
+          }, delay);
+        };
+        [587.33, 698.46, 880.00, 1046.50].forEach((f, i) => {
+          playTone(f, i * 40, 0.15); // D5, F5, A5, C6 quick sweep
+        });
+      },
+      delightUnlock() {
+        const ac = c();
+        const playTone = (freq, delay, dur) => {
+          setTimeout(() => {
+            const osc = ac.createOscillator(), g = ac.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            g.gain.setValueAtTime(0.08, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+            osc.connect(g); g.connect(ac.destination);
+            osc.start(); osc.stop(ac.currentTime + dur);
+          }, delay);
+        };
+        [523.25, 659.25, 784.00, 987.77, 1174.66].forEach((f, i) => {
+          playTone(f, i * 50, 0.35); // C5, E5, G5, B5, D6 sweep
+        });
       }
     };
   })();
@@ -2463,50 +2580,74 @@
   };
 
   /* ═══════════════════════════════════════════════════════════
-     COSMETICS SHOP
+     COLLECTIBLES COLLECTION
      ═══════════════════════════════════════════════════════════ */
-  const Shop = {
-    stars: 0,
-    unlockedItems: ['theme_default', 'hat_none'],
+  const Collection = {
+    unlockedItems: ['theme_default', 'costume_none'],
     activeTheme: 'default',
-    activeHat: 'none',
+    activeCostume: 'none',
 
     init() {
-      this.stars = Store.get('stars', 0);
-      this.unlockedItems = Store.get('unlockedItems', ['theme_default', 'hat_none']);
+      this.unlockedItems = Store.get('unlockedCosmetics', ['theme_default', 'costume_none']);
       this.activeTheme = Store.get('activeTheme', 'default');
-      this.activeHat = Store.get('activeHat', 'none');
+      this.activeCostume = Store.get('activeCostume', 'none');
+
+      if (!this.unlockedItems.includes('theme_default')) this.unlockedItems.push('theme_default');
+      if (!this.unlockedItems.includes('costume_none')) this.unlockedItems.push('costume_none');
 
       this.applyTheme(this.activeTheme);
-      this.applyHat(this.activeHat);
+      this.applyCostume(this.activeCostume);
       this.updateUI();
     },
 
     updateUI() {
-      const el = $('sel-stars-count');
-      if (el) el.textContent = this.stars;
-      const shStars = $('shop-stars');
-      if (shStars) shStars.textContent = this.stars;
+      const totalCorrect = Store.get('totalCorrect', 0);
+      const overallBestStreak = Store.get('bestStreak', 0);
 
-      document.querySelectorAll('.shop-item-btn').forEach(btn => {
+      document.querySelectorAll('#modal-collection .shop-item-btn').forEach(btn => {
         const type = btn.dataset.type;
         const id = btn.dataset.id;
-        const key = `${type}_${id}`;
-        const cost = parseInt(btn.dataset.cost || 0);
-
-        btn.classList.remove('active', 'unlocked');
+        if (!type) return;
         
-        if (this.activeTheme === id && type === 'theme') {
-          btn.classList.add('active');
-          btn.textContent = this.getLabel(id, type) + ' (Active)';
-        } else if (this.activeHat === id && type === 'hat') {
-          btn.classList.add('active');
-          btn.textContent = this.getLabel(id, type) + ' (Active)';
-        } else if (this.unlockedItems.includes(key)) {
+        const key = `${type}_${id}`;
+        const reqType = btn.dataset.reqType;
+        const reqVal = parseInt(btn.dataset.reqVal || 0);
+
+        let isUnlocked = this.unlockedItems.includes(key);
+
+        if (!isUnlocked && reqType) {
+          if (reqType === 'correct' && totalCorrect >= reqVal) {
+            isUnlocked = true;
+          } else if (reqType === 'streak' && overallBestStreak >= reqVal) {
+            isUnlocked = true;
+          }
+
+          if (isUnlocked) {
+            this.unlockedItems.push(key);
+            Store.set('unlockedCosmetics', this.unlockedItems);
+          }
+        }
+
+        btn.classList.remove('active', 'unlocked', 'locked');
+        btn.disabled = false;
+
+        const label = this.getLabel(id, type);
+
+        if (isUnlocked) {
           btn.classList.add('unlocked');
-          btn.textContent = this.getLabel(id, type) + ' (Select)';
+          if ((type === 'theme' && this.activeTheme === id) || (type === 'costume' && this.activeCostume === id)) {
+            btn.classList.add('active');
+            btn.textContent = label + ' (Equipped)';
+          } else {
+            btn.textContent = label + ' (Equip)';
+          }
         } else {
-          btn.textContent = this.getLabel(id, type) + ` (⭐${cost})`;
+          btn.classList.add('locked');
+          if (reqType === 'correct') {
+            btn.textContent = `${label} (${reqVal} Correct)`;
+          } else if (reqType === 'streak') {
+            btn.textContent = `${label} (${reqVal}-Streak)`;
+          }
         }
       });
     },
@@ -2519,9 +2660,9 @@
         if (id === 'candy') return 'Candy Land';
       } else {
         if (id === 'none') return 'Bare Head';
-        if (id === 'pirate') return 'Pirate Hat 🏴‍☠️';
-        if (id === 'crown') return 'Shiny Crown 👑';
-        if (id === 'hero') return 'Hero Mask 🕶️';
+        if (id === 'party') return 'Party Hat 🥳';
+        if (id === 'cape') return 'Super Cape 🦸';
+        if (id === 'pirate') return 'Pirate Eyepatch 🏴‍☠️';
       }
       return '';
     },
@@ -2531,62 +2672,75 @@
       if (theme !== 'default') {
         document.body.classList.add('theme-' + theme);
       }
+      this.activeTheme = theme;
       Store.set('activeTheme', theme);
     },
 
-    applyHat(hat) {
-      Store.set('activeHat', hat);
-      const emojiMap = {
-        none: '',
-        pirate: '🏴‍☠️',
-        crown: '👑',
-        hero: '🕶️'
-      };
-      
-      const acc = $('mascot-accessory');
-      if (acc) acc.textContent = emojiMap[hat] || '';
-      
-      const selAcc = $('sel-mascot-accessory');
-      if (selAcc) selAcc.textContent = emojiMap[hat] || '';
+    applyCostume(costume) {
+      this.activeCostume = costume;
+      Store.set('activeCostume', costume);
+
+      const mascots = [$('mascot-octopus'), $('sel-mascot-octopus')];
+      mascots.forEach(mascot => {
+        if (mascot) {
+          mascot.classList.remove('costume-party', 'costume-cape', 'costume-pirate');
+          if (costume !== 'none') {
+            mascot.classList.add('costume-' + costume);
+          }
+        }
+      });
     },
 
-    addStars(count) {
-      this.stars += count;
-      Store.set('stars', this.stars);
-      this.updateUI();
-    },
-
-    clickItem(type, id, cost) {
+    clickItem(type, id) {
       const key = `${type}_${id}`;
       if (this.unlockedItems.includes(key)) {
         if (type === 'theme') {
-          this.activeTheme = id;
           this.applyTheme(id);
         } else {
-          this.activeHat = id;
-          this.applyHat(id);
+          this.applyCostume(id);
         }
         SFX.tap();
       } else {
-        if (this.stars >= cost) {
-          this.stars -= cost;
-          this.unlockedItems.push(key);
-          Store.set('stars', this.stars);
-          Store.set('unlockedItems', this.unlockedItems);
-          
-          if (type === 'theme') {
-            this.activeTheme = id;
-            this.applyTheme(id);
-          } else {
-            this.activeHat = id;
-            this.applyHat(id);
-          }
-          SFX.bossPop(); // play arpeggio chime reward sound
-        } else {
-          SFX.wrong();
-        }
+        SFX.wrong();
       }
       this.updateUI();
+    },
+
+    checkNewUnlocks(oldBestStreak, oldTotalCorrect) {
+      const totalCorrect = Store.get('totalCorrect', 0);
+      const overallBestStreak = Store.get('bestStreak', 0);
+      let newlyUnlocked = [];
+
+      document.querySelectorAll('#modal-collection .shop-item-btn').forEach(btn => {
+        const type = btn.dataset.type;
+        const id = btn.dataset.id;
+        if (!type) return;
+
+        const key = `${type}_${id}`;
+        if (this.unlockedItems.includes(key)) return;
+
+        const reqType = btn.dataset.reqType;
+        const reqVal = parseInt(btn.dataset.reqVal || 0);
+
+        let unlocked = false;
+        if (reqType === 'correct' && totalCorrect >= reqVal && oldTotalCorrect < reqVal) {
+          unlocked = true;
+        } else if (reqType === 'streak' && overallBestStreak >= reqVal && oldBestStreak < reqVal) {
+          unlocked = true;
+        }
+
+        if (unlocked) {
+          this.unlockedItems.push(key);
+          newlyUnlocked.push({ id, type, label: this.getLabel(id, type) });
+        }
+      });
+
+      if (newlyUnlocked.length > 0) {
+        Store.set('unlockedCosmetics', this.unlockedItems);
+        this.updateUI();
+        return newlyUnlocked;
+      }
+      return null;
     }
   };
 
@@ -2799,16 +2953,19 @@
         SFX.pop();
         SFX.correct();
 
-        if (bubble.isBoss) {
-          BubbleMgr.popBoss(bubble);
-          BubbleMgr.fadeOutAll();
-          this.score += Config.BOSS_REWARD;
-          Shop.addStars(3); // reward +3 stars
-        } else {
-          BubbleMgr.popBubble(bubble, true);
-          BubbleMgr.fadeOutAll();
-          this.score++;
-          Shop.addStars(1); // reward +1 star
+        const oldBestStreak = Store.get('bestStreak', 0);
+        const oldTotalCorrect = Store.get('totalCorrect', 0);
+
+        if (bubble.isCorrect) {
+          if (bubble.isBoss) {
+            BubbleMgr.popBoss(bubble);
+            BubbleMgr.fadeOutAll();
+            this.score += Config.BOSS_REWARD;
+          } else {
+            BubbleMgr.popBubble(bubble, true);
+            BubbleMgr.fadeOutAll();
+            this.score++;
+          }
         }
 
         // Animate mascot success reaction
@@ -2820,10 +2977,28 @@
         this.streak++;
         if (this.streak > this.bestStreak) this.bestStreak = this.streak;
 
+        let beatStreakRecord = false;
+        if (this.bestStreak > oldBestStreak) {
+          Store.set('bestStreak', this.bestStreak);
+          beatStreakRecord = true;
+        }
+
+        // Update totalCorrect
+        Store.set('totalCorrect', oldTotalCorrect + 1);
+
+        this._updateHUD();
+
         // Streak milestone chime & particles
         if (this.streak % 5 === 0) {
           SFX.milestone();
           BubbleMgr._spawnStarBurst(bubble, 20);
+        }
+
+        // Play synthesized delight stings
+        if (this.score === 1 && this.streak === 1) {
+          SFX.delightFirstCorrect();
+        } else if (beatStreakRecord && oldBestStreak > 0) {
+          SFX.delightNewBestStreak();
         }
 
         // Reset consecutive wrongs if answered correctly on first try
@@ -2836,12 +3011,16 @@
         fl.className = 'flash-overlay correct';
         setTimeout(() => fl.className = 'flash-overlay', 200);
 
-        this._updateHUD();
-
-        // Next question after brief pop celebration
-        setTimeout(() => {
-          if (this.isActive) this.nextQuestion();
-        }, 450);
+        // Check for new unlocks
+        const newlyUnlocked = Collection.checkNewUnlocks(oldBestStreak, oldTotalCorrect);
+        if (newlyUnlocked) {
+          this.showUnlockOverlay(newlyUnlocked, bubble);
+        } else {
+          // Next question after brief pop celebration
+          setTimeout(() => {
+            if (this.isActive) this.nextQuestion();
+          }, 450);
+        }
 
       } else {
         // WRONG
@@ -2981,6 +3160,93 @@
       showScreen('game');
       this.nextQuestion();
       Analytics.log('extra_life_used');
+    },
+
+    showUnlockOverlay(newlyUnlocked, bubble) {
+      SFX.delightUnlock();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'unlock-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '9999';
+      overlay.style.background = 'rgba(7, 34, 51, 0.95)';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.padding = '20px';
+      overlay.style.fontFamily = 'Fredoka, sans-serif';
+      overlay.style.animation = 'fade-in-overlay 0.4s ease-out';
+
+      const itemNames = newlyUnlocked.map(item => item.label).join(' & ');
+
+      overlay.innerHTML = `
+        <div style="text-align: center; max-width: 320px; color: #fff; transform: scale(0.8); animation: pop-in-box 0.5s var(--ease-spring) forwards;">
+          <div style="font-size: 4rem; margin-bottom: 20px; animation: bounce-gift 1s infinite alternate;">🎁</div>
+          <h2 style="font-size: 1.8rem; color: var(--accent-yellow); margin-bottom: 12px; text-shadow: 0 4px 10px rgba(0,0,0,0.3);">UNLOCKED!</h2>
+          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 24px; font-family: Quicksand, sans-serif; line-height: 1.4;">
+            Awesome job! You unlocked:<br>
+            <strong style="color: var(--accent-cyan); font-size: 1.15rem; display: block; margin-top: 8px;">${itemNames}</strong>
+          </p>
+          <button id="unlock-btn-equip" style="width: 100%; height: 50px; border-radius: 25px; border: none; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal)); color: var(--bg-deep); font-size: 1.1rem; font-weight: 800; cursor: pointer; box-shadow: 0 6px 15px var(--accent-cyan-glow); margin-bottom: 12px;">Equip Now</button>
+          <button id="unlock-btn-close" style="width: 100%; height: 44px; border-radius: 22px; border: 2px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700; cursor: pointer;">Later</button>
+        </div>
+        <style>
+          @keyframes fade-in-overlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes pop-in-box {
+            to { transform: scale(1); }
+          }
+          @keyframes bounce-gift {
+            from { transform: translateY(0) rotate(-5deg); }
+            to { transform: translateY(-12px) rotate(5deg); }
+          }
+        </style>
+      `;
+
+      document.body.appendChild(overlay);
+
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      for (let i = 0; i < 25; i++) {
+        setTimeout(() => {
+          const s = document.createElement('div');
+          s.className = 'star-particle';
+          s.textContent = ['⭐', '✨', '🌟', '💫', '🎉'][i % 5];
+          s.style.position = 'fixed';
+          s.style.left = cx + 'px';
+          s.style.top = (cy - 40) + 'px';
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 60 + Math.random() * 100;
+          s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+          s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+          overlay.appendChild(s);
+          setTimeout(() => s.remove(), 800);
+        }, i * 30);
+      }
+
+      const equipBtn = document.getElementById('unlock-btn-equip');
+      const closeBtn = document.getElementById('unlock-btn-close');
+
+      equipBtn.onclick = () => {
+        newlyUnlocked.forEach(item => {
+          if (item.type === 'theme') {
+            Collection.applyTheme(item.id);
+          } else {
+            Collection.applyCostume(item.id);
+          }
+        });
+        overlay.remove();
+        if (this.isActive) this.nextQuestion();
+      };
+
+      closeBtn.onclick = () => {
+        overlay.remove();
+        if (this.isActive) this.nextQuestion();
+      };
     }
   };
 
@@ -3206,28 +3472,27 @@
     }
   });
 
-  // Shop modal listeners
-  $('btn-shop').addEventListener('click', () => {
+  // Collection modal listeners
+  $('btn-collection').addEventListener('click', () => {
     SFX.tap();
-    $('modal-shop').classList.add('active');
+    $('modal-collection').classList.add('active');
   });
-  $('shop-close').addEventListener('click', () => {
+  $('collection-close').addEventListener('click', () => {
     SFX.tap();
-    $('modal-shop').classList.remove('active');
+    $('modal-collection').classList.remove('active');
   });
-  $('modal-shop').addEventListener('click', (e) => {
-    if (e.target === $('modal-shop')) {
-      $('modal-shop').classList.remove('active');
+  $('modal-collection').addEventListener('click', (e) => {
+    if (e.target === $('modal-collection')) {
+      $('modal-collection').classList.remove('active');
     }
   });
 
-  // Shop items click listeners
-  document.querySelectorAll('#modal-shop .shop-item-btn[data-type]').forEach(btn => {
+  // Collection items click listeners
+  document.querySelectorAll('#modal-collection .shop-item-btn[data-type]').forEach(btn => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.type;
       const id = btn.dataset.id;
-      const cost = parseInt(btn.dataset.cost || 0);
-      Shop.clickItem(type, id, cost);
+      Collection.clickItem(type, id);
     });
   });
 
@@ -3252,6 +3517,7 @@
     $('sel-streak').textContent = Streaks.check();
     updateDailyCard();
     updateStreakCalendar();
+    Collection.updateUI();
   }
 
   function updateDailyCard() {
@@ -3306,8 +3572,8 @@
   // Init onboarding flags
   Game.hasShownMissTip = Store.get('shownMissTip', false);
 
-  // Initialize Shop
-  Shop.init();
+  // Initialize Collection
+  Collection.init();
 
   updateSelStats();
   initBgBubbles();
